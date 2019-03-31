@@ -15,10 +15,12 @@ public class Servidor {
     private List<PrintStream> clientes;
     private String [] respostaJogadores = new String [3];
     private boolean [] ready = new boolean [3];
-    private boolean [] jogou = new boolean [3];
+    private boolean [] jogou = new boolean [4];
     int matrizResp[][] = new int[3][3];
 
-
+    /**
+     * 
+     */
     public Servidor (int porta) {
         this.porta = porta;
         this.clientes = new ArrayList<PrintStream>();
@@ -36,6 +38,10 @@ public class Servidor {
         }
     }
 
+    /**
+     * 
+     * @throws IOException
+     */
     public void executa () throws IOException {
         ServerSocket servidor = new ServerSocket(this.porta);
         System.out.println("Aguardando conexao com os jogadores.");
@@ -59,7 +65,7 @@ public class Servidor {
         }
         
         while(true) {
-        	if(todosJogaram()) {
+        	if(jogoAcabou()) {
         		String mensagem = play();
         		distribuiMensagem(mensagem);
         	}
@@ -67,30 +73,31 @@ public class Servidor {
 
     }
     
+    /**
+     * 
+     * @return
+     */
     public synchronized String play() {
-    	return "chegou no play";
+        
+        int largest = 0;
+        for ( int i = 0; i < 3; i++ )
+        {
+           if (respostaJogadores[i] == "0"){
+               if (respostaJogadores[i+1] == "1"){
+
+               }
+           }
+        }
+        return ("quem ganhou foi"); // position of the first largest found
 	}
     /**
-     * TODO: Mandar chamar essse método no "Trada Cliente"
-     * TODO: Alterar esse método para guardar a resposta do jogardor numa matriz onde as colunas são os jogadores
      * @param resposta
      * @param numeroJogador
      */
 
-    public void respostaJogador(int resposta, int numeroJogador) {
-        System.out.println(resposta+"Num"+numeroJogador);
-        for (int col = 0; col < 3; col++){
-            for(int lin = 0; lin < 3; lin++){
-                matrizResp[numeroJogador][numeroJogador] = resposta;
-            }
-        }
-        for (int col = 0; col < 3; col++){
-            for(int lin = 0; lin < 3; lin++){
-                System.out.println(matrizResp[col][lin]);
-            }
-        }
-
-
+    public void respostaJogador(String resposta, int numeroJogador) {
+       // System.out.println(resposta+"Num"+numeroJogador);
+        respostaJogadores[numeroJogador] = resposta;
 
     	jogou[numeroJogador] = true;
     }
@@ -98,14 +105,17 @@ public class Servidor {
     /**
      * Verifica se é verdadeiro
      */
-    public boolean todosJogaram() {
-    	for(int i = 0; i < 4; i++) {
+    public boolean jogoAcabou() {
+    	for(int i = 0; i <= 4; i++) {
     		if(jogou[i] == false)
     			return false;
     	}
     	return true;
     }
 
+    public void todosJogaram(int numeroJogador){
+        jogou[numeroJogador] = true;
+    }
     /**
      * 
      * @param msg
@@ -117,6 +127,10 @@ public class Servidor {
         }
     }
     
+    /**
+     * 
+     * @return
+     */
     public boolean isReady() {
     	for(int i = 0; i < 3; i++) {
     		if(ready[i] == false)
@@ -125,6 +139,9 @@ public class Servidor {
     	return true;
     }
     
+    /**
+     * 
+     */
     public void jogadorPronto(int numeroJogador) {
     	ready[numeroJogador] = true;
     }
