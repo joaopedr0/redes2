@@ -16,7 +16,11 @@ public class Servidor {
     private String [] respostaJogadores = new String [3];
     private boolean [] ready = new boolean [3];
     private boolean [] jogou = new boolean [3];
+    int matrizResp[][] = new int[3][3];
 
+    /**
+     * 
+     */
     public Servidor (int porta) {
         this.porta = porta;
         this.clientes = new ArrayList<PrintStream>();
@@ -26,8 +30,18 @@ public class Servidor {
         jogou[0] = false;
         jogou[1] = false;
         jogou[2] = false;
+
+        for (int a = 0; a < 3; a++){
+            for(int b = 0; b < 3; b++){
+                matrizResp[a][b] = 0;
+            }
+        }
     }
 
+    /**
+     * 
+     * @throws IOException
+     */
     public void executa () throws IOException {
         ServerSocket servidor = new ServerSocket(this.porta);
         System.out.println("Aguardando conexao com os jogadores.");
@@ -37,6 +51,7 @@ public class Servidor {
             // aceita um cliente
             Socket cliente = servidor.accept();
             System.out.println("Jogador  " + i + " conectado!");
+            System.out.println(i);
 
             // adiciona saida do cliente à lista
             PrintStream ps = new PrintStream(cliente.getOutputStream());
@@ -46,56 +61,73 @@ public class Servidor {
             TrataCliente tc = new TrataCliente(cliente.getInputStream(), this, i);
             new Thread(tc).start();
             i++;
-        }
-        
-        while(true) {
-        	if(todosJogaram()) {
-        		String mensagem = play();
-        		distribuiMensagem(mensagem);
-        	}
+            System.out.println(tc);
         }
 
     }
     
-    public synchronized String play() {
-    	distribuiMensagem("Todos os jogadores estao prontos!");
-    	distribuiMensagem("Selecione uma opcao:");
-    	distribuiMensagem("0: Pedra \t 1: Papel \t 2: Tesoura");
-    	
-		if(respostaJogadores.equals("000") || respostaJogadores.equals("111") || respostaJogadores.equals("222") ||
-				respostaJogadores.equals("012") || respostaJogadores.equals("021") || respostaJogadores.equals("102") ||
-				respostaJogadores.equals("120") || respostaJogadores.equals("201") || respostaJogadores.equals("210"))
-			return "Empate! Nenhum jogador venceu.";
-		else if(respostaJogadores.equals("022") || respostaJogadores.equals("100") || respostaJogadores.equals("211"))
-			return "O jogador 1 venceu!";
-		else if(respostaJogadores.equals("020") || respostaJogadores.equals("010") || respostaJogadores.equals("121"))
-			return "O jogador 2 venceu!";
-		else if(respostaJogadores.equals("002") || respostaJogadores.equals("001") || respostaJogadores.equals("112"))
-			return "O jogador 3 venceu!";
-		else if(respostaJogadores.equals("002") || respostaJogadores.equals("110") || respostaJogadores.equals("221"))
-			return "Os jogadores 1 e 2 venceram!";
-		else if(respostaJogadores.equals("200") || respostaJogadores.equals("011") || respostaJogadores.equals("122"))
-			return "Os jogadores 2 e 3 venceram!";
-		else if(respostaJogadores.equals("020") || respostaJogadores.equals("101") || respostaJogadores.equals("212"))
-			return "Os jogadores 1 e 3 venceram!";
+    /**
+     * 
+     * @return
+     */
+    public synchronized void play() {
+    	String resultado;
+    	String resposta = respostaJogadores[0].concat(respostaJogadores[1]).concat(respostaJogadores[2]);
+    	if(resposta.equals("000") || resposta.equals("111") || resposta.equals("222") ||
+				resposta.equals("012") || resposta.equals("021") || resposta.equals("102") ||
+				resposta.equals("120") || resposta.equals("201") || resposta.equals("210"))
+    		resultado = "Empate! Nenhum jogador venceu.";
+		else if(resposta.equals("022") || resposta.equals("100") || resposta.equals("211"))
+			resultado = "O jogador 1 venceu!";
+		else if(resposta.equals("020") || resposta.equals("010") || resposta.equals("121"))
+			resultado = "O jogador 2 venceu!";
+		else if(resposta.equals("002") || resposta.equals("001") || resposta.equals("112"))
+			resultado = "O jogador 3 venceu!";
+		else if(resposta.equals("002") || resposta.equals("110") || resposta.equals("221"))
+			resultado = "Os jogadores 1 e 2 venceram!";
+		else if(resposta.equals("200") || resposta.equals("011") || resposta.equals("122"))
+			resultado = "Os jogadores 2 e 3 venceram!";
+		else if(resposta.equals("020") || resposta.equals("101") || resposta.equals("212"))
+			resultado = "Os jogadores 1 e 3 venceram!";
 		else
-			return "Erro.";
+			resultado = "Erro.";
+    	reset();
+    	distribuiMensagem(resultado);
 	}
-    
+    /**
+     * @param resposta
+     * @param numeroJogador
+     */
+
     public void respostaJogador(String resposta, int numeroJogador) {
-    	respostaJogadores[numeroJogador] = resposta;
+       // System.out.println(resposta+"Num"+numeroJogador);
+        respostaJogadores[numeroJogador] = resposta;
     	jogou[numeroJogador] = true;
-    	ready[numeroJogador] = false;
     }
     
-    public boolean todosJogaram() {
-    	for(int i = 0; i < 3; i++) {
+    /**
+     * Verifica se é verdadeiro
+     */
+    public boolean jogoAcabou() {
+    	for(int i = 0; i < 2; i++) {
     		if(jogou[i] == false)
     			return false;
     	}
     	return true;
     }
+    
+    public void reset() {
+    	for(int i = 0; i < 3; i++) {
+    		ready[i] = false;
+    		respostaJogadores[i] = "";
+    		jogou[i] = false;
+    	}
+    }
 
+    /**
+     * 
+     * @param msg
+     */
     public void distribuiMensagem(String msg) {
         // envia msg para todo mundo
         for (PrintStream cliente : this.clientes) {
@@ -103,6 +135,10 @@ public class Servidor {
         }
     }
     
+    /**
+     * 
+     * @return
+     */
     public boolean isReady() {
     	for(int i = 0; i < 3; i++) {
     		if(ready[i] == false)
@@ -111,6 +147,9 @@ public class Servidor {
     	return true;
     }
     
+    /**
+     * 
+     */
     public void jogadorPronto(int numeroJogador) {
     	ready[numeroJogador] = true;
     }
